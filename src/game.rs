@@ -29,6 +29,16 @@ impl ConnectFourGame {
     }
 
 
+    fn is_board_full(&mut self) -> bool {
+        for col in &self.board {
+            if col.len() != BOARD_HEIGHT {
+                return false;
+            }
+        }
+        return true;
+    }
+
+
     // Place the given player's token in the given column.
     // Return whether the move is valid.
     fn place(&mut self, player: i32, col: usize) -> TurnResult {
@@ -64,11 +74,30 @@ mod tests {
     #[test]
     fn test_invalid_place() {
         let mut game = ConnectFourGame::new();
-        for i in 0..BOARD_HEIGHT {
+        for _i in 0..BOARD_HEIGHT {
             assert_eq!(game.place(1, 0), TurnResult::Valid);
         }
         assert_eq!(game.place(1, 0), TurnResult::Invalid);
     }
 
+    #[test]
+    fn test_board_not_full() {
+        let mut game = ConnectFourGame::new();
+        assert!(!game.is_board_full());
+    }
+
+    #[test]
+    fn test_board_full() {
+        let mut game = ConnectFourGame::new();
+        game.board = vec![vec![1; BOARD_HEIGHT]; BOARD_WIDTH];
+        assert!(game.is_board_full());
+    }
+
+/*
+    #[test]
+    fn test_() {
+        let mut game = ConnectFourGame::new();
+    }
+*/
 
 }

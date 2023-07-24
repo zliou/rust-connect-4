@@ -618,25 +618,25 @@ mod tests {
 
     #[test]
     fn test_accept_valid_input() {
-        let mut game = ConnectFourGame::new();
+        let game = ConnectFourGame::new();
         assert!(game.is_valid_input(&String::from("2")));
     }
 
     #[test]
     fn test_accept_valid_input_quit() {
-        let mut game = ConnectFourGame::new();
+        let game = ConnectFourGame::new();
         assert!(game.is_valid_input(&String::from("q")));
     }
 
     #[test]
     fn test_reject_invalid_input() {
-        let mut game = ConnectFourGame::new();
+        let game = ConnectFourGame::new();
         assert!(!game.is_valid_input(&String::from("x")));
     }
 
     #[test]
     fn test_convert_input_to_column() {
-        let mut game = ConnectFourGame::new();
+        let game = ConnectFourGame::new();
         for x in 1..7 {
             assert_eq!(game.convert_input_to_column(x.to_string()), x - 1);
         }

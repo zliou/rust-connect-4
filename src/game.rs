@@ -1,3 +1,5 @@
+use std::cmp::max;
+use std::cmp::min;
 use std::vec::Vec;
 
 
@@ -118,10 +120,33 @@ impl ConnectFourGame {
     // given column. A back-diagonal is shaped like '\'.
     fn check_back_diagonal_win(&self, player_hint: i32, col_hint: usize) -> GameState {
         let placed_row: usize = self.board[col_hint].len() - 1;
-
-
+        let sum = placed_row + col_hint;
+        let mut row: usize = max((sum as i32 - BOARD_WIDTH as i32), 0) as usize;
+        let mut col: i32 = min(sum, BOARD_WIDTH) as i32;
         let mut consecutive: usize = 0;
-        return GameState::InProgress;  // TODO
+        while col >= 0 && row < BOARD_WIDTH {
+            if self.board[col as usize].len() <= row {
+                consecutive = 0;
+                row += 1;
+                col -= 1;
+                continue;
+            }
+            if self.board[col as usize][row] == player_hint {
+                consecutive += 1;
+            } else {
+                consecutive = 0;
+            }
+            if consecutive >= WIN_LENGTH {
+                return match player_hint {
+                    1 => GameState::WinP1,
+                    2 => GameState::WinP2,
+                    _ => GameState::Tie,
+                };
+            }
+            row += 1;
+            col -= 1;
+        }
+        return GameState::InProgress;
     }
 
 
@@ -157,20 +182,6 @@ impl ConnectFourGame {
         }
         return GameState::InProgress;
     }
-    //2     o
-    //1    xo
-    //0    oxo
-    // 0123456
-    // 
-    // 5,2 -> 4,1 -> 3,0 
-
-    //3  x
-    //2 ox
-    //1xox
-    //0oxo
-    // 0123456
-    // 
-    // 2,3 -> 1,2 -> 0,1
 }
 
 
@@ -321,6 +332,54 @@ mod tests {
             vec![2], 
         ];
         assert_eq!(game.check_forward_diagonal_win(/*player_hint=*/1, /*col_hint=*/3),
+                   GameState::InProgress);
+    }
+
+    #[test]
+    fn test_back_diagonal_win() {
+        let mut game = ConnectFourGame::new();
+        game.board = vec![
+            vec![1], 
+            vec![2,2], 
+            vec![2], 
+            vec![2,1,2,1], 
+            vec![1,2,1,2], 
+            vec![1,1,2,1], 
+            vec![1,1,2,], 
+        ];
+        assert_eq!(game.check_back_diagonal_win(/*player_hint=*/1, /*col_hint=*/3),
+                   GameState::WinP1);
+    }
+
+    #[test]
+    fn test_back_diagonal_win_long() {
+        let mut game = ConnectFourGame::new();
+        game.board = vec![
+            vec![1], 
+            vec![2,2], 
+            vec![2,1,2,1,2], 
+            vec![2,1,1,2], 
+            vec![1,2,2,1,1], 
+            vec![1,2,2,1,2,2], 
+            vec![2,1,2,1,1], 
+        ];
+        assert_eq!(game.check_back_diagonal_win(/*player_hint=*/2, /*col_hint=*/2),
+                   GameState::WinP2);
+    }
+
+    #[test]
+    fn test_no_back_diagonal_win() {
+        let mut game = ConnectFourGame::new();
+        game.board = vec![
+            vec![1], 
+            vec![1,2], 
+            vec![], 
+            vec![2,1], 
+            vec![1,2,1,2], 
+            vec![1,1,2,1], 
+            vec![2], 
+        ];
+        assert_eq!(game.check_back_diagonal_win(/*player_hint=*/2, /*col_hint=*/1),
                    GameState::InProgress);
     }
 

@@ -112,6 +112,65 @@ impl ConnectFourGame {
         }
         return GameState::InProgress;
     }
+
+    
+    // Check if a win has occurred on the back-diagonal containing the topmost piece in the
+    // given column. A back-diagonal is shaped like '\'.
+    fn check_back_diagonal_win(&self, player_hint: i32, col_hint: usize) -> GameState {
+        let placed_row: usize = self.board[col_hint].len() - 1;
+
+
+        let mut consecutive: usize = 0;
+        return GameState::InProgress;  // TODO
+    }
+
+
+    // Check if a win has occurred on the forward-diagonal containing the topmost piece in the
+    // given column. A forward-diagonal is shaped like '/'.
+    fn check_forward_diagonal_win(&self, player_hint: i32, col_hint: usize) -> GameState {
+        let placed_row: usize = self.board[col_hint].len() - 1;
+        let diff: usize = col_hint.abs_diff(placed_row);
+        let mut row: usize = if placed_row > col_hint { diff } else { 0 };
+        let mut col: usize = if placed_row < col_hint { diff } else { 0 };
+        let mut consecutive: usize = 0;
+        while row < BOARD_HEIGHT && col < BOARD_WIDTH {
+            if self.board[col].len() <= row {
+                consecutive = 0;
+                row += 1;
+                col += 1;
+                continue;
+            }
+            if self.board[col][row] == player_hint {
+                consecutive += 1;
+            } else {
+                consecutive = 0;
+            }
+            if consecutive >= WIN_LENGTH {
+                return match player_hint {
+                    1 => GameState::WinP1,
+                    2 => GameState::WinP2,
+                    _ => GameState::Tie,
+                };
+            }
+            row += 1;
+            col += 1;
+        }
+        return GameState::InProgress;
+    }
+    //2     o
+    //1    xo
+    //0    oxo
+    // 0123456
+    // 
+    // 5,2 -> 4,1 -> 3,0 
+
+    //3  x
+    //2 ox
+    //1xox
+    //0oxo
+    // 0123456
+    // 
+    // 2,3 -> 1,2 -> 0,1
 }
 
 
@@ -215,6 +274,54 @@ mod tests {
             vec![2], 
         ];
         assert_eq!(game.check_row_win(/*player_hint=*/2, /*col_hint=*/6), GameState::InProgress);
+    }
+
+    #[test]
+    fn test_forward_diagonal_win() {
+        let mut game = ConnectFourGame::new();
+        game.board = vec![
+            vec![1], 
+            vec![2,2], 
+            vec![2], 
+            vec![2,1], 
+            vec![1,2,1,2], 
+            vec![1,1,2,1], 
+            vec![2,1,2,1,1], 
+        ];
+        assert_eq!(game.check_forward_diagonal_win(/*player_hint=*/1, /*col_hint=*/3),
+                   GameState::WinP1);
+    }
+
+    #[test]
+    fn test_forward_diagonal_win_long() {
+        let mut game = ConnectFourGame::new();
+        game.board = vec![
+            vec![1], 
+            vec![2,2], 
+            vec![2,1,2], 
+            vec![2,1,1,2], 
+            vec![1,2,2,1,2], 
+            vec![1,1,2,1,2,2], 
+            vec![2,1,2,1,1], 
+        ];
+        assert_eq!(game.check_forward_diagonal_win(/*player_hint=*/2, /*col_hint=*/3),
+                   GameState::WinP2);
+    }
+
+    #[test]
+    fn test_no_forward_diagonal_win() {
+        let mut game = ConnectFourGame::new();
+        game.board = vec![
+            vec![1], 
+            vec![1,2], 
+            vec![], 
+            vec![2,1], 
+            vec![1,2,1,2], 
+            vec![1,1,2,1], 
+            vec![2], 
+        ];
+        assert_eq!(game.check_forward_diagonal_win(/*player_hint=*/1, /*col_hint=*/3),
+                   GameState::InProgress);
     }
 
 /*

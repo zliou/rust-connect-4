@@ -1,13 +1,23 @@
-
 use std::vec::Vec;
 
 
 const BOARD_WIDTH: usize = 7;
 const BOARD_HEIGHT: usize = 6;
+const WIN_LENGTH: usize = 4;
 
 
-#[derive(PartialEq)]
 #[derive(Debug)]
+#[derive(PartialEq)]
+enum GameState {
+    InProgress,
+    WinP1,
+    WinP2,
+    Tie,
+}
+
+
+#[derive(Debug)]
+#[derive(PartialEq)]
 enum TurnResult {
     Valid,
     Invalid,
@@ -29,6 +39,7 @@ impl ConnectFourGame {
     }
 
 
+    // Return whether the board is full.
     fn is_board_full(&mut self) -> bool {
         for col in &self.board {
             if col.len() != BOARD_HEIGHT {
@@ -47,6 +58,39 @@ impl ConnectFourGame {
         }
         self.board[col].push(player);
         return TurnResult::Valid;
+    }
+
+
+    //
+    fn check_win(&self, player_hint: i32, col_hint: usize) -> GameState {
+        return GameState::InProgress;  // TODO
+    }
+
+
+    // Check if a given column contains a win for the given player.
+    fn check_column_win(&self, player_hint: i32, col_hint: usize) -> GameState {
+        let mut consecutive: usize = 0;
+        for i in (0..self.board[col_hint].len()).rev() {
+            if self.board[col_hint][i] == player_hint {
+                consecutive += 1;
+            } else {
+                consecutive = 0;
+            }
+            if consecutive >= WIN_LENGTH {
+                return match player_hint {
+                    1 => GameState::WinP1,
+                    2 => GameState::WinP2,
+                    _ => GameState::Tie,
+                };
+            }
+        }
+        return GameState::InProgress;
+    }
+
+    
+    // Check if a win has occurred in the row of the topmost piece in the given column.
+    fn check_row_win(&self, player_hint: i32, col_hint: usize) -> GameState {
+        return GameState::InProgress;  // TODO
     }
 }
 
@@ -91,6 +135,20 @@ mod tests {
         let mut game = ConnectFourGame::new();
         game.board = vec![vec![1; BOARD_HEIGHT]; BOARD_WIDTH];
         assert!(game.is_board_full());
+    }
+
+    #[test]
+    fn test_column_win_success() {
+        let mut game = ConnectFourGame::new();
+        game.board[0] = vec![2,1,1,1,1];
+        assert_eq!(game.check_column_win(/*player_hint=*/1, /*col_hint=*/0), GameState::WinP1);
+    }
+
+    #[test]
+    fn test_no_column_win() {
+        let mut game = ConnectFourGame::new();
+        game.board[0] = vec![2,1,2,1];
+        assert_eq!(game.check_column_win(/*player_hint=*/1, /*col_hint=*/0), GameState::InProgress);
     }
 
 /*

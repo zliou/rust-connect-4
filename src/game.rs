@@ -63,9 +63,41 @@ impl ConnectFourGame {
     }
 
 
-    //
+    // Check for a win given the last column played by the given player.
+    // Since moves don't affect the arrangement of already-placed tokens, we only need to
+    // check if the newest token results in a win.
     fn check_win(&self, player_hint: i32, col_hint: usize) -> GameState {
-        return GameState::InProgress;  // TODO
+        let states: Vec<GameState> = vec![
+                self.check_row_win(player_hint, col_hint),
+                self.check_column_win(player_hint, col_hint),
+                self.check_forward_diagonal_win(player_hint, col_hint),
+                self.check_back_diagonal_win(player_hint, col_hint)];
+        for state in states {
+            if state != GameState::InProgress {
+                return state;
+            }
+        }
+        return GameState::InProgress;
+
+/*
+        let row_status = self.check_row_win(player_hint, col_hint);
+        if row_status != GameState::InProgress {
+            return row_status;
+        }
+        let col_status = self.check_column_win(player_hint, col_hint);
+        if col_status != GameState::InProgress {
+            return col_status;
+        }
+        let forward_diagonal_status = self.check_forward_diagonal_win(player_hint, col_hint);
+        if foward_diagonal_status != GameState::InProgress {
+            return forward_diagonal_status;
+        }
+        let back_diagonal_status = self.check_back_diagonal_win(player_hint, col_hint);
+        if back_diagonal_status != GameState::InProgress {
+            return back_diagonal_status;
+        }
+        return GameState::InProgress;
+*/
     }
 
 
@@ -116,13 +148,21 @@ impl ConnectFourGame {
     }
 
     
+    // 2  x xo
+    // 1  xooxo
+    // 0  xoxox
+    //  0123456
+    //  5,2 -> 6,1
+    //  4,2 -> 5,1 -> 6,0
+    //  3,2 -> 4,1 -> 5,0
+
     // Check if a win has occurred on the back-diagonal containing the topmost piece in the
     // given column. A back-diagonal is shaped like '\'.
     fn check_back_diagonal_win(&self, player_hint: i32, col_hint: usize) -> GameState {
         let placed_row: usize = self.board[col_hint].len() - 1;
         let sum = placed_row + col_hint;
-        let mut row: usize = max((sum as i32 - BOARD_WIDTH as i32), 0) as usize;
-        let mut col: i32 = min(sum, BOARD_WIDTH) as i32;
+        let mut row: usize = max(sum as i32 - (BOARD_WIDTH - 1) as i32, 0) as usize;
+        let mut col: i32 = min(sum, BOARD_WIDTH - 1) as i32;
         let mut consecutive: usize = 0;
         while col >= 0 && row < BOARD_WIDTH {
             if self.board[col as usize].len() <= row {
@@ -304,6 +344,22 @@ mod tests {
     }
 
     #[test]
+    fn test_forward_diagonal_win_high() {
+        let mut game = ConnectFourGame::new();
+        game.board = vec![
+            vec![1,2], 
+            vec![2,2,2], 
+            vec![2,1,2,2], 
+            vec![2,1,1,1,2], 
+            vec![1,2,1,2], 
+            vec![1,1,], 
+            vec![2,1,2,1,1], 
+        ];
+        assert_eq!(game.check_forward_diagonal_win(/*player_hint=*/2, /*col_hint=*/3),
+                   GameState::WinP2);
+    }
+
+    #[test]
     fn test_forward_diagonal_win_long() {
         let mut game = ConnectFourGame::new();
         game.board = vec![
@@ -352,6 +408,22 @@ mod tests {
     }
 
     #[test]
+    fn test_back_diagonal_win_high() {
+        let mut game = ConnectFourGame::new();
+        game.board = vec![
+            vec![1], 
+            vec![2,2], 
+            vec![2], 
+            vec![1,1,1,2,1], 
+            vec![2,1,1,1,2], 
+            vec![1,2,1,2,1], 
+            vec![2,1,2,2,], 
+        ];
+        assert_eq!(game.check_back_diagonal_win(/*player_hint=*/1, /*col_hint=*/3),
+                   GameState::WinP1);
+    }
+
+    #[test]
     fn test_back_diagonal_win_long() {
         let mut game = ConnectFourGame::new();
         game.board = vec![
@@ -383,6 +455,81 @@ mod tests {
                    GameState::InProgress);
     }
 
+    #[test]
+    fn test_check_win_row() {
+        let mut game = ConnectFourGame::new();
+        game.board = vec![
+            vec![1], 
+            vec![1,2], 
+            vec![], 
+            vec![2,1], 
+            vec![1,1,1,2], 
+            vec![1,1,2,1], 
+            vec![2,1], 
+        ];
+        assert_eq!(game.check_win(/*player_hint=*/1, /*col_hint=*/3), GameState::WinP1);
+    }
+
+    #[test]
+    fn test_check_win_column() {
+        let mut game = ConnectFourGame::new();
+        game.board = vec![
+            vec![1], 
+            vec![1,2], 
+            vec![], 
+            vec![2,1], 
+            vec![2,2,2,2], 
+            vec![1,1,2,1], 
+            vec![2], 
+        ];
+        assert_eq!(game.check_win(/*player_hint=*/2, /*col_hint=*/4), GameState::WinP2);
+    }
+
+    #[test]
+    fn test_check_win_forward_diagonal() {
+        let mut game = ConnectFourGame::new();
+        game.board = vec![
+            vec![1], 
+            vec![1,2], 
+            vec![1], 
+            vec![2,1], 
+            vec![1,2,1,2], 
+            vec![1,1,2,1], 
+            vec![2], 
+        ];
+        assert_eq!(game.check_win(/*player_hint=*/1, /*col_hint=*/3), GameState::WinP1);
+    }
+
+    #[test]
+    fn test_check_win_back_diagonal() {
+        let mut game = ConnectFourGame::new();
+        game.board = vec![
+            vec![1], 
+            vec![1,2], 
+            vec![], 
+            vec![2,1,2,1], 
+            vec![1,2,1,2], 
+            vec![1,1,2,1], 
+            vec![1], 
+        ];
+        assert_eq!(game.check_win(/*player_hint=*/1, /*col_hint=*/3), GameState::WinP1);
+    }
+
+    #[test]
+    fn test_check_win_no_win() {
+        let mut game = ConnectFourGame::new();
+        game.board = vec![
+            vec![1], 
+            vec![1,2], 
+            vec![], 
+            vec![2,1], 
+            vec![1,2], 
+            vec![1,1,2,1], 
+            vec![2], 
+        ];
+        assert_eq!(game.check_win(/*player_hint=*/2, /*col_hint=*/4), GameState::InProgress);
+    }
+
 /*
     #[test]
     fn test_() {
@@ -391,3 +538,4 @@ mod tests {
 */
 
 }
+

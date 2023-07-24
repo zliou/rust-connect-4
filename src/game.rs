@@ -5,6 +5,7 @@ use std::vec::Vec;
 
 const BOARD_WIDTH: usize = 7;
 const BOARD_HEIGHT: usize = 6;
+const COMMAND_QUIT: &str = "q";
 const WIN_LENGTH: usize = 4;
 
 
@@ -41,6 +42,56 @@ impl ConnectFourGame {
     }
 
 
+    // Loop until a valid player input is received.
+    fn get_player_input(&self) -> String {
+        loop {
+            let mut input = String::new();
+            let _b = std::io::stdin().read_line(&mut input).unwrap();
+            if self.is_valid_input(&input) {
+                return input;
+            }
+            println!("Invalid move. Please try again.");
+        }
+    }
+
+
+    // Return whether the given input is a valid game control.
+    fn is_valid_input(&self, input: &String) -> bool {
+        return input.len() == 1 && (input == COMMAND_QUIT || (
+                '1' <= input.chars().nth(0).unwrap() && 
+                input.chars().nth(0).unwrap() <= '7'));
+    }
+
+
+    // Convert the given column input (1-indexed, string) into a column index (0-indexed, usize).
+    fn convert_input_to_column(&self, input: String) -> usize {
+        let col: usize = input.parse::<usize>().unwrap() - 1;
+        return col;
+    }
+
+
+    // Run one turn of the game. Return the resulting game state.
+    fn turn(&mut self, active_player: i32) -> GameState {
+        loop {
+            let input: String = self.get_player_input();
+            if input == COMMAND_QUIT {
+                return GameState::Tie;
+            }
+            let col: usize = self.convert_input_to_column(input);
+            if self.place(active_player, col) == TurnResult::Valid {
+                return self.check_win(active_player, col);
+            }
+        }
+        
+    }
+
+
+    // Return whether a given column is full.
+    fn is_column_full(&self, col: usize) -> bool {
+        return self.board[col].len() >= BOARD_HEIGHT;
+    }
+
+
     // Return whether the board is full.
     fn is_board_full(&self) -> bool {
         for col in &self.board {
@@ -55,7 +106,8 @@ impl ConnectFourGame {
     // Place the given player's token in the given column.
     // Return whether the move is valid.
     fn place(&mut self, player: i32, col: usize) -> TurnResult {
-        if self.board[col].len() >= BOARD_HEIGHT {
+        if self.is_column_full(col) {
+            println!("Column {} is full. Try another column.", col + 1);
             return TurnResult::Invalid;
         }
         self.board[col].push(player);
@@ -132,14 +184,6 @@ impl ConnectFourGame {
     }
 
     
-    // 2  x xo
-    // 1  xooxo
-    // 0  xoxox
-    //  0123456
-    //  5,2 -> 6,1
-    //  4,2 -> 5,1 -> 6,0
-    //  3,2 -> 4,1 -> 5,0
-
     // Check if a win has occurred on the back-diagonal containing the topmost piece in the
     // given column. A back-diagonal is shaped like '\'.
     fn check_back_diagonal_win(&self, player_hint: i32, col_hint: usize) -> GameState {
@@ -236,6 +280,19 @@ mod tests {
             assert_eq!(game.place(1, 0), TurnResult::Valid);
         }
         assert_eq!(game.place(1, 0), TurnResult::Invalid);
+    }
+
+    #[test]
+    fn test_column_not_full() {
+        let game = ConnectFourGame::new();
+        assert!(!game.is_column_full(0));
+    }
+
+    #[test]
+    fn test_column_full() {
+        let mut game = ConnectFourGame::new();
+        game.board = vec![vec![1; BOARD_HEIGHT]; BOARD_WIDTH];
+        assert!(game.is_column_full(0));
     }
 
     #[test]
@@ -527,6 +584,32 @@ mod tests {
             vec![1,2,1,2,1,2], 
         ];
         assert_eq!(game.check_win(/*player_hint=*/2, /*col_hint=*/0), GameState::Tie);
+    }
+
+    #[test]
+    fn test_accept_valid_input() {
+        let mut game = ConnectFourGame::new();
+        assert!(game.is_valid_input(&String::from("2")));
+    }
+
+    #[test]
+    fn test_accept_valid_input_quit() {
+        let mut game = ConnectFourGame::new();
+        assert!(game.is_valid_input(&String::from("q")));
+    }
+
+    #[test]
+    fn test_reject_invalid_input() {
+        let mut game = ConnectFourGame::new();
+        assert!(!game.is_valid_input(&String::from("x")));
+    }
+
+    #[test]
+    fn test_convert_input_to_column() {
+        let mut game = ConnectFourGame::new();
+        for x in 1..7 {
+            assert_eq!(game.convert_input_to_column(x.to_string()), x - 1);
+        }
     }
 
 /*

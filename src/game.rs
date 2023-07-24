@@ -42,7 +42,7 @@ impl ConnectFourGame {
 
 
     // Return whether the board is full.
-    fn is_board_full(&mut self) -> bool {
+    fn is_board_full(&self) -> bool {
         for col in &self.board {
             if col.len() != BOARD_HEIGHT {
                 return false;
@@ -64,6 +64,7 @@ impl ConnectFourGame {
 
 
     // Check for a win given the last column played by the given player.
+    // Return a tie if the board is full and there is no winner.
     // Since moves don't affect the arrangement of already-placed tokens, we only need to
     // check if the newest token results in a win.
     fn check_win(&self, player_hint: i32, col_hint: usize) -> GameState {
@@ -77,27 +78,10 @@ impl ConnectFourGame {
                 return state;
             }
         }
-        return GameState::InProgress;
-
-/*
-        let row_status = self.check_row_win(player_hint, col_hint);
-        if row_status != GameState::InProgress {
-            return row_status;
-        }
-        let col_status = self.check_column_win(player_hint, col_hint);
-        if col_status != GameState::InProgress {
-            return col_status;
-        }
-        let forward_diagonal_status = self.check_forward_diagonal_win(player_hint, col_hint);
-        if foward_diagonal_status != GameState::InProgress {
-            return forward_diagonal_status;
-        }
-        let back_diagonal_status = self.check_back_diagonal_win(player_hint, col_hint);
-        if back_diagonal_status != GameState::InProgress {
-            return back_diagonal_status;
+        if self.is_board_full() {
+            return GameState::Tie;
         }
         return GameState::InProgress;
-*/
     }
 
 
@@ -256,7 +240,7 @@ mod tests {
 
     #[test]
     fn test_board_not_full() {
-        let mut game = ConnectFourGame::new();
+        let game = ConnectFourGame::new();
         assert!(!game.is_board_full());
     }
 
@@ -528,6 +512,21 @@ mod tests {
             vec![2], 
         ];
         assert_eq!(game.check_win(/*player_hint=*/2, /*col_hint=*/4), GameState::InProgress);
+    }
+
+    #[test]
+    fn test_check_win_tie() {
+        let mut game = ConnectFourGame::new();
+        game.board = vec![
+            vec![1,2,1,2,1,2], 
+            vec![2,1,2,1,2,1], 
+            vec![2,1,2,1,2,1], 
+            vec![1,2,1,2,1,2], 
+            vec![2,1,2,1,2,1], 
+            vec![2,1,2,1,2,1], 
+            vec![1,2,1,2,1,2], 
+        ];
+        assert_eq!(game.check_win(/*player_hint=*/2, /*col_hint=*/0), GameState::Tie);
     }
 
 /*

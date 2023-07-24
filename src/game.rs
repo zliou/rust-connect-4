@@ -49,17 +49,17 @@ impl ConnectFourGame {
     pub fn play(&mut self) -> () {
         let mut active_player: i32 = 1;  // Player 1 goes first.
         loop {
-            printer::print_board(&self.board);
+            printer::print_board(&self.board, active_player);
             let turn_end_state: GameState = self.turn(active_player);
             if turn_end_state == GameState::WinP1 || turn_end_state == GameState::WinP2 {
                 let winner_token: String = if turn_end_state == GameState::WinP1 {
                         String::from(TOKEN_P1) } else { String::from(TOKEN_P2) };
-                printer::print_board(&self.board);  // Reprint the board when someone wins.
+                printer::print_end(&self.board);  // Reprint the board when someone wins.
                 println!("{winner_token} wins!");
                 println!("Thanks for playing.");
                 return;
             } else if turn_end_state == GameState::Tie {
-                printer::print_board(&self.board);  // Reprint the board if there's a tie.
+                printer::print_end(&self.board);  // Reprint the board if there's a tie.
                 println!("It's a tie!");
                 println!("Thanks for playing.");
                 return;

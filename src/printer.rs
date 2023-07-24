@@ -9,7 +9,7 @@ const TOKEN_P1: &str = "🟡";
 const TOKEN_P2: &str = "🔴";
 
 
-pub fn print_board(board: &Vec<Vec<i32>>) {
+pub fn print_board(board: &Vec<Vec<i32>>, player: i32) {
     clear_board();
     for row in (0..BOARD_HEIGHT).rev() {
         print_row(board, row);
@@ -18,7 +18,17 @@ pub fn print_board(board: &Vec<Vec<i32>>) {
     print_bottom_row();
     print_command_row();
     println!("");
-    print_instructions();
+    print_instructions(player);
+}
+
+
+pub fn print_end(board: &Vec<Vec<i32>>) {
+    clear_board();
+    for row in (0..BOARD_HEIGHT).rev() {
+        print_row(board, row);
+        println!("");
+    }
+    print_bottom_row();
 }
 
 
@@ -43,10 +53,11 @@ fn print_command_row() {
 }
 
 
-fn print_instructions() {
+fn print_instructions(player: i32) {
     println!("Choose a column - [1] through [{}] - and press [Enter] to play that column. ",
-             BOARD_WIDTH - 1);
+             BOARD_WIDTH);
     println!("Enter [q] to quit.");
+    println!("It's {}'s turn.", token(player));
 }
 
 

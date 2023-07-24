@@ -1,5 +1,7 @@
 ## Rust Connect-4
+
 Author: Zachary Liou
+
 Date: 2023 July 23
 
 This is a game of Connect-4 that can be played on the command line. Enjoy!

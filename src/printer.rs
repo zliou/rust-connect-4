@@ -1,23 +1,70 @@
 use std::vec::Vec;
 
 
+const BOARD_INDENT: &str = "    ";
 const BOARD_WIDTH: usize = 7;
 const BOARD_HEIGHT: usize = 6;
+const TOKEN_EMPTY: &str = "  ";  // Player tokens are 2 chars wide.
+const TOKEN_P1: &str = "🟡";
+const TOKEN_P2: &str = "🔴";
 
 
+pub fn print_board(board: &Vec<Vec<i32>>) {
+    clear_board();
+    for row in (0..BOARD_HEIGHT).rev() {
+        print_row(board, row);
+        println!("");
+    }
+    print_bottom_row();
+    print_command_row();
+    println!("");
+    print_instructions();
+}
 
-pub fn print_row(board: &Vec<Vec<i32>>, row: usize) {
+
+fn token(player: i32) -> String {
+    return match player {
+        1 => String::from(TOKEN_P1),
+        2 => String::from(TOKEN_P2),
+        _ => String::from(TOKEN_EMPTY),
+    }
+}
+
+
+fn print_bottom_row() {
+    print!("{}", BOARD_INDENT);
+    println!(" ==================================== ");
+}
+
+
+fn print_command_row() {
+    print!("{}", BOARD_INDENT);
+    println!("   1    2    3    4    5    6    7  ");
+}
+
+
+fn print_instructions() {
+    println!("Choose a column - [1] through [{}] - and press [Enter] to play that column. ",
+             BOARD_WIDTH - 1);
+    println!("Enter [q] to quit.");
+}
+
+
+fn print_row(board: &Vec<Vec<i32>>, row: usize) {
+    print!("{}", BOARD_INDENT);
     print!(" | ");
     for col in 0..BOARD_WIDTH {
-        print!("{}", board[col][row]);
+        if board[col].len() <= row {
+            print!("{}", String::from(TOKEN_EMPTY));
+        } else {
+            print!("{}", token(board[col][row]));
+        }
         print!(" | ");
     }
 }
 
-pub fn print_board(board: &Vec<Vec<i32>>) {
-    for row in 0..BOARD_HEIGHT {
-        print_row(board, row);
-        println!("");
-    }
+
+fn clear_board() {
+    println!("{esc}c", esc = 27 as char);
 }
 

@@ -1,3 +1,4 @@
+use crate::printer;
 use std::cmp::max;
 use std::cmp::min;
 use std::vec::Vec;
@@ -6,6 +7,8 @@ use std::vec::Vec;
 const BOARD_WIDTH: usize = 7;
 const BOARD_HEIGHT: usize = 6;
 const COMMAND_QUIT: &str = "q";
+const TOKEN_P1: &str = "🟡";
+const TOKEN_P2: &str = "🔴";
 const WIN_LENGTH: usize = 4;
 
 
@@ -42,11 +45,54 @@ impl ConnectFourGame {
     }
 
 
+    // Run the game until one player wins, a tie is reached, or the quit command is received.
+    pub fn play(&mut self) -> () {
+        let mut active_player: i32 = 1;  // Player 1 goes first.
+        loop {
+            printer::print_board(&self.board);
+            let turn_end_state: GameState = self.turn(active_player);
+            if turn_end_state == GameState::WinP1 || turn_end_state == GameState::WinP2 {
+                let winner_token: String = if turn_end_state == GameState::WinP1 {
+                        String::from(TOKEN_P1) } else { String::from(TOKEN_P2) };
+                printer::print_board(&self.board);  // Reprint the board when someone wins.
+                println!("{winner_token} wins!");
+                println!("Thanks for playing.");
+                return;
+            } else if turn_end_state == GameState::Tie {
+                printer::print_board(&self.board);  // Reprint the board if there's a tie.
+                println!("It's a tie!");
+                println!("Thanks for playing.");
+                return;
+            }
+            active_player = if active_player == 1 { 2 } else { 1 };
+        }
+    }
+
+
+    // Run one turn of the game. Return the resulting game state.
+    fn turn(&mut self, active_player: i32) -> GameState {
+        loop {
+            let input: String = self.get_player_input();
+            if input == COMMAND_QUIT {
+                return GameState::Tie;
+            }
+            let col: usize = self.convert_input_to_column(input);
+            if self.place(active_player, col) == TurnResult::Valid {
+                return self.check_win(active_player, col);
+            }
+        }
+        
+    }
+
+
     // Loop until a valid player input is received.
     fn get_player_input(&self) -> String {
         loop {
             let mut input = String::new();
             let _b = std::io::stdin().read_line(&mut input).unwrap();
+            if input.len() == 2 {
+                input.pop();  // Truncate the trailing newline char.
+            }
             if self.is_valid_input(&input) {
                 return input;
             }
@@ -67,22 +113,6 @@ impl ConnectFourGame {
     fn convert_input_to_column(&self, input: String) -> usize {
         let col: usize = input.parse::<usize>().unwrap() - 1;
         return col;
-    }
-
-
-    // Run one turn of the game. Return the resulting game state.
-    fn turn(&mut self, active_player: i32) -> GameState {
-        loop {
-            let input: String = self.get_player_input();
-            if input == COMMAND_QUIT {
-                return GameState::Tie;
-            }
-            let col: usize = self.convert_input_to_column(input);
-            if self.place(active_player, col) == TurnResult::Valid {
-                return self.check_win(active_player, col);
-            }
-        }
-        
     }
 
 

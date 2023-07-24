@@ -641,13 +641,5 @@ mod tests {
             assert_eq!(game.convert_input_to_column(x.to_string()), x - 1);
         }
     }
-
-/*
-    #[test]
-    fn test_() {
-        let mut game = ConnectFourGame::new();
-    }
-*/
-
 }
 
